@@ -1,0 +1,7 @@
+branded_nodes:
+  container:
+    icon: libraries/icons/container.svg
+    label: Container
+  pipeline:
+    icon: libraries/icons/pipeline.svg
+    label: Pipeline

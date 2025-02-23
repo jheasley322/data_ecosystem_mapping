@@ -1,0 +1,110 @@
+import os
+import time
+import random
+import requests
+from bs4 import BeautifulSoup
+from urllib.parse import urljoin
+
+# Define the target URL
+URL = "https://web.archive.org/web/20230606165706/https://www.instana.com/supported-technologies/"
+WAYBACK_BASE = "https://web.archive.org"
+
+# Define save location
+documents_dir = os.path.expanduser("~/Documents")
+save_folder = os.path.join(documents_dir, "Instana_Hex_Logos")
+os.makedirs(save_folder, exist_ok=True)
+
+# Function to fetch images from the page
+def fetch_image_urls():
+    response = requests.get(URL, headers={"User-Agent": "Mozilla/5.0"})
+    if response.status_code != 200:
+        print(f"❌ Failed to fetch the page. Status Code: {response.status_code}")
+        return []
+
+    soup = BeautifulSoup(response.text, "html.parser")
+    img_tags = soup.find_all("img")
+
+    # Extract valid image URLs
+    img_urls = []
+    for img in img_tags:
+        img_url = img.get("src")
+        if not img_url or img_url.startswith("data:image"):  # Skip base64 images
+            continue
+
+        # Convert relative URLs to absolute URLs
+        if img_url.startswith("/"):
+            full_img_url = urljoin(WAYBACK_BASE, img_url)
+        elif img_url.startswith("http"):
+            full_img_url = img_url
+        else:
+            full_img_url = urljoin(URL, img_url)
+
+        img_urls.append(full_img_url)
+
+    return img_urls
+
+# Function to download images in chunks
+def download_images(img_urls, chunk_size=10, retry_attempts=3):
+    downloaded = 0
+    failed_downloads = []
+
+    for i in range(0, len(img_urls), chunk_size):
+        print(f"\n🔄 Downloading batch {i // chunk_size + 1} of {len(img_urls) // chunk_size + 1}...")
+
+        # Get the next batch of images
+        batch = img_urls[i:i + chunk_size]
+
+        for full_img_url in batch:
+            img_name = os.path.basename(full_img_url.split("?")[0])  # Remove URL parameters
+            img_path = os.path.join(save_folder, img_name)
+
+            # Retry logic for failed requests
+            for attempt in range(1, retry_attempts + 1):
+                try:
+                    print(f"📥 Attempting to download: {full_img_url} (Attempt {attempt}/{retry_attempts})")
+                    img_response = requests.get(full_img_url, headers={"User-Agent": "Mozilla/5.0"}, timeout=10)
+
+                    if img_response.status_code == 200:
+                        with open(img_path, "wb") as f:
+                            f.write(img_response.content)
+                        print(f"✅ Downloaded: {img_name}")
+                        downloaded += 1
+                        break  # Exit retry loop on success
+                    else:
+                        print(f"⚠️ Failed with HTTP {img_response.status_code}, retrying...")
+                except requests.exceptions.RequestException as e:
+                    print(f"⚠️ Error: {e}, retrying...")
+
+                time.sleep(random.uniform(3, 7))  # Wait before retrying
+
+            else:
+                print(f"❌ Failed to download {img_name} after {retry_attempts} attempts")
+                failed_downloads.append(full_img_url)
+
+            time.sleep(random.uniform(1, 4))  # Delay between individual downloads
+
+        print("\n🛑 Taking a short break before the next batch...")
+        time.sleep(random.uniform(10, 20))  # Pause before the next chunk
+
+    return downloaded, failed_downloads
+
+# Run the scraping process
+print("🔍 Fetching image URLs...")
+image_urls = fetch_image_urls()
+
+if image_urls:
+    print(f"✅ Found {len(image_urls)} images.")
+    downloaded_count, failed_list = download_images(image_urls)
+
+    print("\n" + "="*40)
+    print(f"✅ Total images downloaded: {downloaded_count}")
+    print(f"📂 All images saved in: {save_folder}")
+
+    if failed_list:
+        print("\n❌ The following images **failed** to download after multiple attempts:")
+        for img in failed_list:
+            print(img)
+    else:
+        print("\n✅ All valid images were successfully downloaded!")
+else:
+    print("❌ No images found. Please check the URL or try again later.")

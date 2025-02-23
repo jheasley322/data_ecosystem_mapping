@@ -1,0 +1,49 @@
+project:
+  name: "New Project"
+  description: "Describe the purpose of this project"
+  author: "Your Name"
+
+branding:
+  branding_use: "PRIMARY"  # Options: PRIMARY, SUPPLEMENT
+
+nodes:
+  - id: "db1"
+    name: "Main Database"
+    type: "database"
+    branding: "sql_server"  # Uses branding if available
+    position: { x: 100, y: 200 }
+    label: "Customer Data"  # Optional label centered in node
+
+  - id: "api1"
+    name: "Customer API"
+    type: "api"
+    branding: "custom_api"
+    position: { x: 300, y: 200 }
+    label: "Public API"
+
+  - id: "service1"
+    name: "Data Processing Service"
+    type: "service"
+    branding: "kafka"
+    position: { x: 500, y: 200 }
+    label: "ETL Process"
+
+containers:
+  - id: "backend"
+    name: "Backend Systems"
+    position: { x: 50, y: 150 }
+    size: { width: 600, height: 400 }
+    children: ["db1", "api1", "service1"]
+
+connections:
+  - from: "db1"
+    to: "api1"
+    type: "real_time"
+
+  - from: "api1"
+    to: "service1"
+    type: "batch"
+
+export_settings:
+  include_timestamps: true
+  formats: ["png", "svg", "json"]

@@ -1,0 +1,40 @@
+general:
+  default_export: "png"   # Default export format
+  node_spacing: 100       # Default spacing between nodes
+  edge_style: "curved"    # Options: straight, curved, orthogonal
+  allow_node_drag: true   # Allows moving nodes in UI
+  container_behavior:
+    move_with_parent: true  # Moving a container moves all child nodes
+    resizable: true         # Containers can be resized
+  export_formats: ["mermaid", "png", "svg", "json", "xml", "jpeg"]
+
+node_types:
+  database:
+    icon: "libraries/icons/database.png"
+    color: "#4285F4"
+  api:
+    icon: "libraries/icons/api.png"
+    color: "#34A853"
+  service:
+    icon: "libraries/icons/service.png"
+    color: "#FBBC05"
+  pipeline:
+    icon: "libraries/icons/pipeline.png"
+    color: "#EA4335"
+  container:
+    icon: "libraries/icons/container.png"
+    color: "#444444"
+
+edge_types:
+  default:
+    style: "solid"
+    color: "#000000"
+  real_time:
+    style: "solid"
+    color: "#34A853"
+  batch:
+    style: "dashed"
+    color: "#EA4335"
+
+image_library:
+  path: "libraries/images/"  # Folder where custom images for nodes can be stored
